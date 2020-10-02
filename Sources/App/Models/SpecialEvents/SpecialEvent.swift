@@ -7,10 +7,10 @@
 
 import Foundation
 
-protocol Event {
+protocol SpecialEvent {
     var id: UUID { get }
     var name: String { get }
     var gpAdded: Int { get }
 
-    func validationForPullRequest(_ pullRequestId: String) -> Bool
+    func validationForPullRequest(_ pullRequestId: String, repositoryName: String, repositoryOrganization: String) -> Bool
 }
