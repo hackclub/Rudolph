@@ -13,6 +13,7 @@ struct CreateSubmittedPullRequest: Migration {
             .field("reason", .string, .required)
             .field("gpGiven", .int, .required)
             .field("events", .array(of: .string), .required)
+            .field("slackTs", .string, .required)
             .create()
     }
 

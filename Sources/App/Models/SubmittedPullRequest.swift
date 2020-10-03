@@ -24,6 +24,9 @@ final class SubmittedPullRequest: Model, Content {
     
     @Field(key: "githubPrID")
     var githubPrID: String
+    
+    @Field(key: "slackTs")
+    var slackTs: String
 
     @Field(key: "reason")
     var reason: String
