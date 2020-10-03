@@ -9,6 +9,9 @@ func routes(_ app: Application) throws {
         if contentType.type == "url_verification" {
             let content = try req.content.decode(SlackEventVerification.self)
             return content.challenge
+        } else if contentType.type == "reaction_added" {
+            // reaction added
+            return ""
         } else {
             return ""
         }
