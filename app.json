@@ -1,0 +1,28 @@
+{
+  "name": "Rudolph",
+  "description": "Give gp to ships!",
+  "keywords": [
+    "swift",
+    "vapor",
+    "hack",
+    "club",
+    "christmas",
+    "rudolph",
+    "reindeer",
+    "gp"
+  ],
+  "repository": "https://github.com/hackclub/Rudolph",
+  "logo": "https://cloud-ew8znyumf.vercel.app/image.png",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "addons": ["heroku-postgresql:hobby-dev", "papertrail"],
+  "buildpacks": [
+    {
+      "url": "https://buildpack-registry.s3.amazonaws.com/buildpacks/vapor/vapor.tgz"
+    }
+  ],
+}
