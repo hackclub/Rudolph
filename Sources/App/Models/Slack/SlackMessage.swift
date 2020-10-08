@@ -7,6 +7,9 @@
 
 import Foundation
 import Vapor
+#if !canImport(ObjectiveC)
+import FoundationNetworking
+#endif
 
 struct SlackMessageResponse: Content {
     var ts: String
