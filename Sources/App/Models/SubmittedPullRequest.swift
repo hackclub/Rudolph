@@ -39,17 +39,18 @@ final class SubmittedPullRequest: Model, Content {
 
     init() { }
 
-    init(id: UUID? = nil, slackID: String, isValid: Bool, isApproved: Bool, url: URL, reason: String, gpGiven: Int, events: [UUID]?, githubPrID: String, githubPrOrg: String, githubPrRepoName: String) {
+    init(id: UUID? = UUID(), slackID: String, isValid: Bool, isApproved: Bool, githubPrOrg: String, githubPrRepoName: String, githubPrID: String, slackTs: String, reason: String, gpGiven: Int, events: [UUID]?) {
         self.id = id
         self.slackID = slackID
         self.isValid = isValid
         self.isApproved = isApproved
+        self.githubPrOrg = githubPrOrg
+        self.githubPrRepoName = githubPrRepoName
+        self.githubPrID = githubPrID
+        self.slackTs = slackTs
         self.reason = reason
         self.gpGiven = gpGiven
         self.events = events
-        self.githubPrID = githubPrID
-        self.githubPrOrg = githubPrOrg
-        self.githubPrRepoName = githubPrRepoName
     }
 }
 
