@@ -52,7 +52,7 @@ func routes(_ app: Application) throws {
                                     submittedPullRequest.reason = ""
                                     submittedPullRequest.gpGiven = 15
                                     submittedPullRequest.events = [UUID(uuidString: "00000000-0000-0000-0000-000000000000")!]
-                                    let creation = submittedPullRequest.create(on: req.db)
+//                                    let creation = submittedPullRequest.create(on: req.db)
                                     // TODO: Run Checks
                                     
                                     // TODO: Send to review channel

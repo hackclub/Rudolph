@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 #if !canImport(ObjectiveC)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 struct SlackMessageResponse: Content {
@@ -100,10 +100,16 @@ extension Dictionary: URLQueryParameterStringConvertible {
     var queryParameters: String {
         var parts: [String] = []
         for (key, value) in self {
-            let part = String(format: "%@=%@",
-                              String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                              String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
+            let key = String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+            let value = String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+            key.withCString { _ in
+                value.withCString { _ in
+                    let part = String(format: "%@=%@",
+                                      String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                                      String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+                    parts.append(part as String)
+                }
+            }
         }
         return parts.joined(separator: "&")
     }
@@ -116,7 +122,12 @@ extension URL {
       @return A new URL.
      */
     func appendingQueryParameters(_ parametersDictionary: Dictionary<String, String>) -> URL {
-        let URLString: String = String(format: "%@?%@", absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
+        absoluteString.withCString { _ in
+            parametersDictionary.queryParameters.withCString { _ in
+                let URLString: String = String(format: "%@?%@", absoluteString, parametersDictionary.queryParameters)
+                return URL(string: URLString)!
+            }
+        }
+        
     }
 }
