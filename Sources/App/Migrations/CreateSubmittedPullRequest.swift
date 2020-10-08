@@ -12,7 +12,7 @@ struct CreateSubmittedPullRequest: Migration {
             .field("githubPrID", .string, .required)
             .field("reason", .string, .required)
             .field("gpGiven", .int, .required)
-            .field("events", .array(of: .string), .required)
+            .field("events", .array(of: .makeOptionalType(.string)), .required)
             .field("slackTs", .string, .required)
             .create()
     }

@@ -4,7 +4,6 @@ import Vapor
 let emoji = "deer"
 
 func routes(_ app: Application) throws {
-
     app.post("slack", "events") { req -> String in
         let contentType = try req.content.decode(SlackEventType.self)
         guard contentType.token == Environment.get("VERIFICATION_TOKEN") else { throw Abort(.imATeapot) }
@@ -23,13 +22,14 @@ func routes(_ app: Application) throws {
                         // Check for a GitHub link, if it doesn't match notify
                         let pattern = #"https:\/\/github\.com\/(?<owner>.*)\/(?<repo>.*)\/pull\/(?<number>\d*)"# // TODO: refactor networking out
                         // NOTE TO REVIEWERS: TODO: HAS LINUS ADDED THIS SECRET IN TO HEROKU??
-                        NetworkController.shared.getMessage(channel: event.item["channel"]!, ts: event.item["ts"]!) { message in
+                        NetworkInterface.shared.getMessage(channel: event.item["channel"]!, ts: event.item["ts"]!) { message in
+                            guard let message = message else { return }
                             let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive)
                             if let match = regex?.firstMatch(in: message, options: [], range: NSRange(location: 0, length: message.utf16.count)) {
                                 guard let ownerRange = Range(match.range(withName: "owner"), in: message),
                                     let repoRange = Range(match.range(withName: "repo"), in: message),
                                     let numberRange = Range(match.range(withName: "number"), in: message) else {
-                                    NetworkController.shared.sendMessage(text: "Waaaa.... that doesn't look like a github link to meeee! Make sure you're linking the pull request!", channel: event.item["channel"]!, ts: event.item["ts"]!, completion: nil)
+                                    NetworkInterface.shared.sendMessage(text: "Waaaa.... that doesn't look like a github link to meeee! Make sure you're linking the pull request!", channel: event.item["channel"]!, ts: event.item["ts"]!, completion: nil)
                                     return
                                 }
                                 let owner = message[ownerRange]
@@ -39,7 +39,7 @@ func routes(_ app: Application) throws {
                                 let queue = DispatchQueue(label: "Santa's Slay")
                                 queue.async {
                                     // post message to slack
-                                    NetworkController.shared.sendMessage(text: "Woohoo! :yay: I'm going to chew on your PR for a little while to make sure it tastes good, but if all goes well you'll get some GP!", channel: event.item["channel"]!, ts: event.item["ts"]!, completion: nil)
+                                    NetworkInterface.shared.sendMessage(text: "Woohoo! :yay: I'm going to chew on your PR for a little while to make sure it tastes good, but if all goes well you'll get some GP!", channel: event.item["channel"]!, ts: event.item["ts"]!, completion: nil)
                                     let submittedPullRequest = SubmittedPullRequest()
                                     submittedPullRequest.id = UUID()
                                     submittedPullRequest.slackID = event.item_user
@@ -51,14 +51,13 @@ func routes(_ app: Application) throws {
                                     submittedPullRequest.slackTs = event.item["ts"]!
                                     submittedPullRequest.reason = ""
                                     submittedPullRequest.gpGiven = 15
-                                    submittedPullRequest.events = [UUID(uuidString: "00000000-0000-0000-0000-000000000000")!]
+                                    submittedPullRequest.events = []
                                     let creation = submittedPullRequest.create(on: req.db)
                                     // TODO: Run Checks
-                                    
                                     // TODO: Send to review channel
                                 }
                             } else {
-                                NetworkController.shared.sendMessage(text: "Waaaa.... that doesn't look like a github link to me! Make sure you're linking the pull request!", channel: event.item["channel"]!, ts: event.item["ts"]!, completion: nil)
+                                NetworkInterface.shared.sendMessage(text: "Waaaa.... that doesn't look like a github link to me! Make sure you're linking the pull request!", channel: event.item["channel"]!, ts: event.item["ts"]!, completion: nil)
                             }
                         }
                     }
