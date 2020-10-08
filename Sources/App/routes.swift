@@ -4,6 +4,11 @@ import Vapor
 let emoji = "deer"
 
 func routes(_ app: Application) throws {
+    
+    app.get("hello") { req -> String in
+        NetworkController.shared.newSendMessage(text: "HELLO FROM LINUS' NEW NETWORK STUFF", channel: "G01C9MTKXU1")
+        return "hi there"
+    }
 
     app.post("slack", "events") { req -> String in
         let contentType = try req.content.decode(SlackEventType.self)

@@ -21,113 +21,130 @@ struct SlackMessageResponse: Content {
 
 class NetworkController {
     static let shared = NetworkController()
+    
+    func newSendMessage(text: String, channel: String) {
+        let requestHeaders: [String: String] = ["Content-Type": "application/x-www-form-urlencoded"]
+        var requestBodyComponents = URLComponents()
+        requestBodyComponents.queryItems = [URLQueryItem(name: "token", value: Environment.get("SLACK_TOKEN")!),
+        URLQueryItem(name: "channel", value: channel),
+        URLQueryItem(name: "text", value: text)]
+        
+        var request = URLRequest(url: URL(string: "https://slack.com/api/chat.postMessage")!)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = requestHeaders
+        request.httpBody = requestBodyComponents.query?.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            print(error)
+        }.resume()
+    }
 
     func sendMessage(text: String, channel: String, ts: String?, completion: ((String) -> Void)?) { // TODO: FOR NICE CODE RETURN NIL
-        let sessionConfig = URLSessionConfiguration.default
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-        let url = URL(string: "https://slack.com/api/chat.postMessage")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        var bodyParameters = [
-            "token": Environment.get("SLACK_TOKEN")!,
-            "text": text,
-            "channel": channel,
-        ]
-        if let ts = ts {
-            bodyParameters["thread_ts"] = ts
-        }
-        let bodyString = bodyParameters.queryParameters
-        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
-
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, _: URLResponse?, error: Error?) -> Void in
-            if error == nil {
-                if let completion = completion {
-                    let jsonDecoder = JSONDecoder()
-                    completion(try! jsonDecoder.decode(SlackMessageResponse.self, from: data!).ts)
-                }
-            } else {
-                if let completion = completion {
-                    completion("")
-                }
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
+//        let sessionConfig = URLSessionConfiguration.default
+//        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+//        let url = URL(string: "https://slack.com/api/chat.postMessage")!
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "POST"
+//        request.addValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
+//        var bodyParameters = [
+//            "token": Environment.get("SLACK_TOKEN")!,
+//            "text": text,
+//            "channel": channel,
+//        ]
+//        if let ts = ts {
+//            bodyParameters["thread_ts"] = ts
+//        }
+//        let bodyString = bodyParameters.queryParameters
+//        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+//
+//        let task = session.dataTask(with: request, completionHandler: { (data: Data?, _: URLResponse?, error: Error?) -> Void in
+//            if error == nil {
+//                if let completion = completion {
+//                    let jsonDecoder = JSONDecoder()
+//                    completion(try! jsonDecoder.decode(SlackMessageResponse.self, from: data!).ts)
+//                }
+//            } else {
+//                if let completion = completion {
+//                    completion("")
+//                }
+//            }
+//        })
+//        task.resume()
+//        session.finishTasksAndInvalidate()
     }
-
+//
     func getMessage(channel: String, ts: String, completion: @escaping (String) -> Void) {
-        let sessionConfig = URLSessionConfiguration.default
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-        let url = URL(string: "https://slack.com/api/conversations.history")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        let bodyParameters = [
-            "token": Environment.get("SLACK_TOKEN")!,
-            "channel": channel,
-            "limit": "1",
-            "latest": ts,
-            "inclusive": "true",
-        ]
-        let bodyString = bodyParameters.queryParameters
-        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
-        let task = session.dataTask(with: request) { data, _, error in
-            if error == nil {
-                let jsonDecoder = JSONDecoder()
-                let message = try! jsonDecoder.decode(SlackHistoryContentResponse.self, from: data!).messages.first!.text
-                completion(message)
-            } else {
-                completion("")
-            }
-        }
-        task.resume()
-        session.finishTasksAndInvalidate()
+//        let sessionConfig = URLSessionConfiguration.default
+//        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+//        let url = URL(string: "https://slack.com/api/conversations.history")!
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "POST"
+//        request.addValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
+//        let bodyParameters = [
+//            "token": Environment.get("SLACK_TOKEN")!,
+//            "channel": channel,
+//            "limit": "1",
+//            "latest": ts,
+//            "inclusive": "true",
+//        ]
+//        let bodyString = bodyParameters.queryParameters
+//        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+//        let task = session.dataTask(with: request) { data, _, error in
+//            if error == nil {
+//                let jsonDecoder = JSONDecoder()
+//                let message = try! jsonDecoder.decode(SlackHistoryContentResponse.self, from: data!).messages.first!.text
+//                completion(message)
+//            } else {
+//                completion("")
+//            }
+//        }
+//        task.resume()
+//        session.finishTasksAndInvalidate()
     }
 }
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String { get }
-}
-
-extension Dictionary: URLQueryParameterStringConvertible {
-    /**
-      This computed property returns a query parameters string from the given NSDictionary. For
-      example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-      string will be @"day=Tuesday&month=January".
-      @return The computed parameters string.
-     */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let key = String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-            let value = String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-            key.withCString { _ in
-                value.withCString { _ in
-                    let part = String(format: "%@=%@",
-                                      String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                                      String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-                    parts.append(part as String)
-                }
-            }
-        }
-        return parts.joined(separator: "&")
-    }
-}
-
-extension URL {
-    /**
-      Creates a new URL by adding the given query parameters.
-      @param parametersDictionary The query parameter dictionary to add.
-      @return A new URL.
-     */
-    func appendingQueryParameters(_ parametersDictionary: Dictionary<String, String>) -> URL {
-        absoluteString.withCString { _ in
-            parametersDictionary.queryParameters.withCString { _ in
-                let URLString: String = String(format: "%@?%@", absoluteString, parametersDictionary.queryParameters)
-                return URL(string: URLString)!
-            }
-        }
-        
-    }
-}
+//
+//protocol URLQueryParameterStringConvertible {
+//    var queryParameters: String { get }
+//}
+//
+//extension Dictionary: URLQueryParameterStringConvertible {
+//    /**
+//      This computed property returns a query parameters string from the given NSDictionary. For
+//      example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+//      string will be @"day=Tuesday&month=January".
+//      @return The computed parameters string.
+//     */
+//    var queryParameters: String {
+//        var parts: [String] = []
+//        for (key, value) in self {
+//            let key = String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+//            let value = String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+//            key.withCString { _ in
+//                value.withCString { _ in
+//                    let part = String(format: "%@=%@",
+//                                      String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+//                                      String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+//                    parts.append(part as String)
+//                }
+//            }
+//        }
+//        return parts.joined(separator: "&")
+//    }
+//}
+//
+//extension URL {
+//    /**
+//      Creates a new URL by adding the given query parameters.
+//      @param parametersDictionary The query parameter dictionary to add.
+//      @return A new URL.
+//     */
+//    func appendingQueryParameters(_ parametersDictionary: Dictionary<String, String>) -> URL {
+//        absoluteString.withCString { _ in
+//            parametersDictionary.queryParameters.withCString { _ in
+//                let URLString: String = String(format: "%@?%@", absoluteString, parametersDictionary.queryParameters)
+//                return URL(string: URLString)!
+//            }
+//        }
+//
+//    }
+//}
