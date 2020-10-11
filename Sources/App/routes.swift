@@ -57,6 +57,15 @@ func routes(_ app: Application) throws {
                         submittedPullRequest.gpGiven = 15
                         submittedPullRequest.events = []
                         let creation = submittedPullRequest.create(on: req.db)
+                        // TODO: Calculate gp
+                        specialEvents.forEach { specialEvent in
+                            if specialEvent.validationForPullRequest(submittedPullRequest.githubPrID, repositoryName: submittedPullRequest.githubPrRepoName, repositoryOrganization: submittedPullRequest.githubPrOrg) {
+                                submittedPullRequest.gpGiven += specialEvent.gpAdded
+                                    submittedPullRequest.events?.append(specialEvent.id)
+                            }
+                        }
+//                      let creation = submittedPullRequest.create(on: req.db)
+                        submittedPullRequest.create(on: req.db)
                         // TODO: Run Checks
                         // TODO: Send to review channel
                     }
