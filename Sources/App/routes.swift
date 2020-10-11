@@ -1,12 +1,14 @@
 import Fluent
 import Vapor
+import CryptoSwift
 
 let emoji = "deer"
 
 func routes(_ app: Application) throws {
     app.post("slack", "events") { req -> String in
+        guard verifySignature(for: req) else { throw Abort(.imATeapot)}
         let contentType = try req.content.decode(SlackEventType.self)
-        guard contentType.token == Environment.get("VERIFICATION_TOKEN") else { throw Abort(.imATeapot) }
+        
         if contentType.type == "url_verification" {
             let content = try req.content.decode(SlackEventVerification.self)
             return content.challenge
@@ -20,7 +22,7 @@ func routes(_ app: Application) throws {
                     slackTss.whenSuccess { tss in
                         guard !tss.contains(event.item["ts"]!) else { return }
                         // Check for a GitHub link, if it doesn't match notify
-                        let pattern = #"https:\/\/github\.com\/(?<owner>.*)\/(?<repo>.*)\/pull\/(?<number>\d*)"# // TODO: refactor networking out
+                        let pattern = #"(https|http):\/\/github\.com\/(?<owner>.*)\/(?<repo>.*)\/pull\/(?<number>\d*)"# // TODO: refactor networking out
                         // NOTE TO REVIEWERS: TODO: HAS LINUS ADDED THIS SECRET IN TO HEROKU??
                         NetworkInterface.shared.getMessage(channel: event.item["channel"]!, ts: event.item["ts"]!) { message in
                             guard let message = message else { return }
@@ -67,5 +69,18 @@ func routes(_ app: Application) throws {
         } else {
             return ""
         }
+    }
+}
+
+
+func verifySignature(for request: Request) -> Bool {
+    let timestamp = request.headers["X-Slack-Request-Timestamp"].first!
+    let hmacConcate = "v0:\(timestamp):\(request.body.string!)"
+    let key = Environment.get("SIGNING_SECRET")!
+    let localSignature = "v0=\(try! HMAC(key: key, variant: .sha256).authenticate(hmacConcate.bytes).toHexString())"
+    if localSignature == request.headers["X-Slack-Signature"].first! {
+        return true
+    } else {
+        return false
     }
 }
