@@ -31,18 +31,11 @@
 import Foundation
 import Vapor
 
-struct SlackMessageResponse: Content {
-    var ts: String
-
-    enum CodingKeys: String, CodingKey {
-        case ts
-    }
-}
-
 public struct NetworkInterface {
     static let shared = NetworkInterface()
 
     private let badApiUrl = "https://slack.com/api/"
+    private let catApiUrl = "https://api.github.com/graphql"
     #if canImport(FoundationNetworking)
         private let session = FoundationNetworking.URLSession(configuration: .default)
     #else
@@ -89,6 +82,44 @@ public struct NetworkInterface {
             completion(try! jsonDecoder.decode(SlackHistoryContentResponse.self, from: data!).messages.first!.text)
 
         }.resume()
+    }
+
+    func getPrStatus(githubOwner: String, githubRepoName: String, githubPrNumber: Int, completion: @escaping (GithubLabelsResponse?) -> Void) {
+        let query = "{\"query\": \"query{repository(name:\\\"\(githubRepoName)\\\",owner:\\\"\(githubOwner)\\\"){pullRequest(number:\(githubPrNumber)){state author{login}labels(first:10){nodes{name}}}}}\"}" // This is me being mean to your eyes
+        let url = URL(string: "\(catApiUrl)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("bearer \(Environment.get("GITHUBAPI_TOKEN")!)", forHTTPHeaderField: "Authorization")
+        request.httpBody = query.data(using: .utf8, allowLossyConversion: true)
+        session.dataTask(with: request) { data, _, error in
+            guard error == nil else {
+                completion(nil)
+                return
+            }
+            let jsonDecoder = JSONDecoder()
+            completion(try? jsonDecoder.decode(GithubLabelsResponse.self, from: data!))
+        }.resume()
+    }
+
+    func sendGp(sendId: String, reason: String, amount: Int) {
+        let url = URL(string: "https://bankerapi.glitch.me/give")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        let bodyObject: [String: Any] = [
+            "send_id": sendId,
+            "reason": reason,
+            "gp": amount,
+            "token": Environment.get("BANKER_TOKEN")!,
+            "bot_id": "U01C6M4TFUZ",
+        ]
+        request.httpBody = try! JSONSerialization.data(withJSONObject: bodyObject, options: [])
+        session.dataTask(with: request, completionHandler: { (data: Data?, _: URLResponse?, error: Error?) -> Void in
+            let dataString = String(data: data!, encoding: .utf8)!
+            if error != nil || dataString != "OK" {
+                NetworkInterface.shared.sendMessage(text: ":skull-ios: I couldn't send gp to <@\(sendId)>. They were supposed to get \(amount), for \(reason). :hankey: The error was \(error?.localizedDescription ?? "no error") and the data was \(dataString) :roblox_oof:", channel: "G01BU5Y0EAE", ts: nil, completion: nil)
+            }
+        }).resume()
     }
 
     internal init() {}

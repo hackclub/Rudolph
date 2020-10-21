@@ -9,11 +9,12 @@ struct CreateSubmittedPullRequest: Migration {
             .field("isApproved", .bool, .required)
             .field("githubPrOrg", .string, .required)
             .field("githubPrRepoName", .string, .required)
-            .field("githubPrID", .string, .required)
+            .field("githubPrID", .int, .required)
             .field("reason", .string, .required)
             .field("gpGiven", .int, .required)
             .field("events", .array(of: .makeOptionalType(.string)), .required)
             .field("slackTs", .string, .required)
+            .field("reviewTs", .string, .required)
             .create()
     }
 

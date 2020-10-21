@@ -23,7 +23,7 @@ final class SubmittedPullRequest: Model, Content {
     var githubPrRepoName: String
     
     @Field(key: "githubPrID")
-    var githubPrID: String
+    var githubPrID: Int
     
     @Field(key: "slackTs")
     var slackTs: String
@@ -36,10 +36,13 @@ final class SubmittedPullRequest: Model, Content {
 
     @OptionalField(key: "events")
     var events: [UUID]?
+    
+    @Field(key: "reviewTs")
+    var reviewTs: String
 
     init() { }
 
-    init(id: UUID? = UUID(), slackID: String, isValid: Bool, isApproved: Bool, githubPrOrg: String, githubPrRepoName: String, githubPrID: String, slackTs: String, reason: String, gpGiven: Int, events: [UUID]?) {
+    init(id: UUID? = UUID(), slackID: String, isValid: Bool, isApproved: Bool, githubPrOrg: String, githubPrRepoName: String, githubPrID: Int, slackTs: String, reason: String, gpGiven: Int, events: [UUID]?, reviewTs: String) {
         self.id = id
         self.slackID = slackID
         self.isValid = isValid
@@ -51,6 +54,7 @@ final class SubmittedPullRequest: Model, Content {
         self.reason = reason
         self.gpGiven = gpGiven
         self.events = events
+        self.reviewTs = reviewTs
     }
 }
 

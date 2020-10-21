@@ -10,7 +10,7 @@ import Vapor
 struct SlackEventType: Content {
     var type: String
     var token: String
-    var event: SlackEventReactionAdded? = nil  // todo: support other events
+    var event: SlackEventReactionAdded? = nil
     
     enum CodingKeys: String, CodingKey {
         case type
