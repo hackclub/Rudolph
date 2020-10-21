@@ -12,5 +12,5 @@ protocol SpecialEvent {
     var name: String { get }
     var gpAdded: Int { get }
 
-    func validationForPullRequest(_ pullRequestNumber: String, repositoryName: String, repositoryOrganization: String) -> Bool
+    func validationForPullRequest(_ pullRequestNumber: Int, repositoryName: String, repositoryOrganization: String) -> Bool
 }
