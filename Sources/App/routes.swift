@@ -16,8 +16,8 @@ func routes(_ app: Application) throws {
             // reaction added
             let event = contentType.event!
             guard event.type == "reaction_added" else { return "" }
-            guard event.reaction == emoji else { return "" } // TODO: Create custom emoji
             if event.item["channel"]! == "G01C9MTKXU1" || event.item["channel"]! == "C01504DCLVD" { // If we're in the testing or scrapbook channel TODO; Should we make this available anywhere on slack?
+                guard event.reaction == emoji else { return "" } // TODO: Create custom emoji
                 let slackTss = SubmittedPullRequest.query(on: req.db).all(\.$slackTs)
                 slackTss.whenSuccess { tss in
                     guard !tss.contains(event.item["ts"]!) else { return }
@@ -76,7 +76,7 @@ func routes(_ app: Application) throws {
                                     return failWithMessage("That pull request was marked as spam/invalid. *DO NOT* spam pull requests in order to get fake internet points.", sendId: event.item_user)
                                 }
                                 guard githubResp.data.repository.pullRequest.state == .merged else { return failWithMessage("That Pull Request you sent doesn't look merged! Go get it merged then come to me for gp!", sendId: event.item_user) }
-                                guard githubResp.data.repository.pullRequest.author.login != owner else { return failWithMessage("oops. You can only get gp for contributing to open source projects that are outside your GitHub!", sendId: event.item_user) }
+                                guard githubResp.data.repository.pullRequest.author.login != owner else { return failWithMessage("oops. You can only get gp for contributing to open source projects that are outside your GitHub account!", sendId: event.item_user) }
                                 submittedPullRequest.isValid = true
                                 submittedPullRequest.save(on: req.db)
                                 // Send to review channel
@@ -89,8 +89,24 @@ func routes(_ app: Application) throws {
                         }
                     }
                 }
-            } else if event.item["channel"]! == "G01BU5Y0EAE" {  // Check if we're in the review channel
-                // TODO Check if the PR is accepted based on the reaction
+            } else if event.item["channel"]! == "G01BU5Y0EAE" { // Check if we're in the review channel
+                // TODO: Check if the PR is accepted based on the reaction
+                let event = contentType.event!
+                guard event.type == "reaction_added" else { return "" }
+                // get the db entry
+                let reviewingPullRequest = SubmittedPullRequest.query(on: req.db)
+                    .filter(\.$reviewTs == event.item["ts"]!)
+                    .first()
+                reviewingPullRequest.whenSuccess { reviewingPullRequest in
+                    guard let reviewingPullRequest = reviewingPullRequest else { return }
+                    if event.reaction == "x" {
+                        failWithMessage("Your Pull Request #\(reviewingPullRequest.githubPrID), \(reviewingPullRequest.githubPrOrg)/\(reviewingPullRequest.githubPrRepoName) was rejected. DM <@U011CFN98K1> if you have any questions.", sendId: reviewingPullRequest.slackID)
+                    } else if event.reaction == "true" {
+                        NetworkInterface.shared.sendGp(sendId: reviewingPullRequest.slackID, reason: "Good job, your Pull Request was accepted!", amount: reviewingPullRequest.gpGiven)
+                        reviewingPullRequest.isApproved = true
+                        reviewingPullRequest.save(on: req.db)
+                    }
+                }
             }
         }
         return ""
