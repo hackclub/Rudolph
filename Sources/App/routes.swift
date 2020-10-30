@@ -2,7 +2,7 @@ import CryptoSwift
 import Fluent
 import Vapor
 
-let emoji = "deer"
+let emoji = "rudolph"
 
 func routes(_ app: Application) throws {
     app.post("slack", "events") { req -> String in
@@ -16,7 +16,7 @@ func routes(_ app: Application) throws {
             // reaction added
             let event = contentType.event!
             guard event.type == "reaction_added" else { return "" }
-            if event.item["channel"]! == "G01C9MTKXU1" || event.item["channel"]! == "C01504DCLVD" { // If we're in the testing or scrapbook channel TODO; Should we make this available anywhere on slack?
+            if event.item["channel"]! == "G01C9MTKXU1" || event.item["channel"]! == "C01504DCLVD" || event.item["channel"]! == "C01DKAXDFA9" { // If we're in the testing or scrapbook channel TODO; Should we make this available anywhere on slack?
                 guard event.reaction == emoji else { return "" } // TODO: Create custom emoji
                 let slackTss = SubmittedPullRequest.query(on: req.db).all(\.$slackTs)
                 slackTss.whenSuccess { tss in
@@ -99,12 +99,14 @@ func routes(_ app: Application) throws {
                     .first()
                 reviewingPullRequest.whenSuccess { reviewingPullRequest in
                     guard let reviewingPullRequest = reviewingPullRequest else { return }
+                    guard reviewingPullRequest.isApproved != true else { return }
                     if event.reaction == "x" {
                         failWithMessage("Your Pull Request #\(reviewingPullRequest.githubPrID), \(reviewingPullRequest.githubPrOrg)/\(reviewingPullRequest.githubPrRepoName) was rejected. DM <@U011CFN98K1> if you have any questions.", sendId: reviewingPullRequest.slackID)
                     } else if event.reaction == "true" {
                         NetworkInterface.shared.sendGp(sendId: reviewingPullRequest.slackID, reason: "Good job, your Pull Request was accepted!", amount: reviewingPullRequest.gpGiven)
                         reviewingPullRequest.isApproved = true
                         reviewingPullRequest.save(on: req.db)
+                        NetworkInterface.shared.sendMessage(text: ":yay: <@\(reviewingPullRequest.slackID)>'s pull request was accepted!! :rudolph: :deer: :nyan: https://github.com/\(reviewingPullRequest.githubPrOrg)/\(reviewingPullRequest.githubPrRepoName)/pull/\(reviewingPullRequest.githubPrID)", channel: "C01DKAXDFA9", ts: nil, completion: nil)
                     }
                 }
             }

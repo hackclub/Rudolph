@@ -1,11 +1,11 @@
 # Rudolph
-[![Swift Version](https://img.shields.io/badge/Swift-5.2-orange?logo=swift)](https://swift.org)
+[![Swift Version](https://img.shields.io/badge/Swift-5.3-orange?logo=swift)](https://swift.org)
 ![Heroku](https://img.shields.io/badge/Heroku-Deployed-purple?logo=heroku)
 [![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](https://github.com/hackclub/Rudolph/blob/master/LICENSE)
 
 Giving gp to Hack Clubbers who contribute to open source!
 
-## 🏖 The floww:
+## 🏖 The flow:
  1. Post a message to scrapbook and react with the special emoji (`rudolph`)
  2. Rudolph runs some basic checks on, to make sure they aren't spam Pull Requests
  3. The total amount of gp you earn is calculated which is **15gp** plus any events that the PR is eligible for
